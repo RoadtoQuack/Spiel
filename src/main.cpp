@@ -10,6 +10,7 @@
 #include <random>
 
 //g++ -I/root/Spiel/build/_deps/nlohmann_json-src/include -I/root/Spiel/build/_deps/cli11-src/include src/main.cpp
+//./a.out -f database.json
 
 // Forward declaration of Mobs struct
 namespace local
@@ -111,6 +112,7 @@ namespace local{
         std::string Name;
         std::string Rasse;
         int hp;
+        int maxhp;
         int lvl;
         int attackdmg;
         int magicdmg;
@@ -118,13 +120,16 @@ namespace local{
     public:
     Mobs( const std::string& Name, 
             const std::string& Rasse, 
-            int hp, 
+            int hp,
+            int maxhp, 
             int lvl,
             int attackdmg, 
             int magicdmg) :
             Name(Name),
             Rasse(Rasse),
             hp(hp),
+            maxhp(maxhp),
+            lvl(lvl),
             attackdmg(attackdmg),
             magicdmg(magicdmg){}
             
@@ -132,7 +137,7 @@ namespace local{
             
             void print() const{
                 std::cout << Name << " | "  << Rasse << " | Level: " << lvl <<  std::endl;
-                std::cout << "Health        : " << hp << std::endl;
+                std::cout << "Health        : " << hp << "/" << maxhp << std::endl;
                 std::cout << "Attack-Damage : " << attackdmg << std::endl;
                 std::cout << "Magic-Power   : " << magicdmg << std::endl;
                 std::cout << "-----------------------------------\n";
@@ -190,6 +195,7 @@ namespace local{
             Kampf_S,
             showKampf_S,
             Besiegt_S,
+            Gameover_S,
             showComsumables_S,
             showCharacter_S,
             showShop_S,
@@ -233,6 +239,19 @@ namespace local{
             std::cout << "1. Heiltränke\n";
             std::cout << "2. Zurück zum Menü\n";            
         }
+        void enter(){
+            std::cout << "Drücke Enter zum Fortfahren...\n";
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear inp
+            while (true) {
+            char ch = std::cin.get(); // Liest ein einzelnes Zeichen von der Eingabe
+            if (ch == '\n') {
+           // Eingabetaste (Enter) erkannt
+            std::cout << "Eingabetaste (Enter) wurde gedrückt." << std::endl;
+            break; // Endet die Schleife nachdem die Eingabetaste erkannt wurde
+            }
+
+            }
+        }
 
         int exit(){
             //Aktualisierung der Objekte in der Json File
@@ -272,7 +291,7 @@ namespace local{
 
             return 0;
         }
-         State_T showConsumables(){
+        State_T showConsumables(){
             
         while(true){
             system("clear");
@@ -448,31 +467,59 @@ namespace local{
         }
         State_T showKampf(){
             system("clear");
-                 for (const auto& held : Held) {
+                for (const auto& held : Held) {
                 held.print();
             }
                 std::cout << "Enemy:" << std::endl;
                 for (const auto& mobs : Mob){
                 mobs.print();
             }
-                usleep(3000 *1000);
-                return Kampf_S;
+            enter();
+            //usleep(3000 *1000);
+            return Kampf_S;
         }
 
         State_T Besiegt(){
-                std::cout << "Dein Gegner wurde besiegt\n";
-                std::cout << "Du erhälst 1000EP und 200 coins\n";
-                coins += 200;
+            std::cout << "Dein Gegner wurde besiegt\n";
+            std::cout << "Du erhälst 1000EP und 200 coins\n";
+            coins += 200;
 
-                for (auto& held : Held) {
-                held.getEXP(1000);
-                usleep(1000 * 1000);
-                 }
-                 Mob.pop_back();
-                return showMainMenu_S;
+            for (auto& held : Held) {
+            held.getEXP(1000);
+            usleep(1000 * 1000);
+            }
+            Mob.pop_back();
+            enter();
+            return showMainMenu_S;
 
         }
-        State_T StartScreen(){
+
+        State_T GameOver(){//Löschen des Characters in dem Vektor und Json
+            system("clear");
+            Held.pop_back();
+            Mob.pop_back();
+            db["Held"].erase(0);
+
+            std::cout << "You DIED\n";
+            usleep(1000 * 1000);
+            while(true){
+                std::cout << "Du you want to Start a new Game?(y/n)\n";
+                char ch = std::cin.get();
+
+                if(ch == 'y' || ch == 'Y'){
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear inpubuffert 
+                    return StartScreen_S;
+                }
+
+                if(ch == 'n' || ch == 'N'){
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear inpubuffert 
+                    return exit_S;
+                }
+            }
+            return Gameover_S; 
+        }
+
+        State_T StartScreen(){//Startbildschirm
             system("clear");
             std::cout << "Final Slug Metal Fantasy\n\n";
             std::cout << "Press Enter to Start\n";
@@ -487,29 +534,77 @@ namespace local{
                 }
             }
 
-            if(Held.empty()){
+            if(Held.empty()){ //Erstellung eines Neuen Characters
                 system("clear");
                 std::string Name, Klasse, Rasse;
                 int HP = 100;
                 int AttackDamage = 15;
                 int MagicDamage = 5;
 
+                std::vector<std::string> allyklassen; 
+                std::vector<std::string> allyrassen;
+
+                std::ifstream file("allyKlassen");
+                
+                if(file.is_open()){                     //Einlesen der verfügbaren Klassen in ein vector
+                    std::string name;
+                    while(std::getline(file, name)){
+                        allyklassen.push_back(name);
+                    }
+                    file.close();
+                }
+
+                std::ifstream file2("allyRassen");
+
+                if(file2.is_open()){                    //Einlesen der verfügbaren Rassen in ein vector
+                    std::string rasse;
+                    while(std::getline(file2, rasse)){
+                        allyrassen.push_back(rasse);
+                    }
+                    file2.close();
+                }
+
+
                 std::cout << "Erstelle einen neuen Character\n\n";
                 std::cout << "Name: ";
-                std::cin >> Name;
-                std::cout << "Klasse: ";
-                std::cin >> Klasse;
-                std::cout << "Rasse: ";
-                std::cin >> Rasse;
-                std::cout << "MaxHP: 100\n";
-                std::cout << "AttackDamage: 15\n";
-                std::cout << "MagicDamage: 15\n";
-                usleep(1000 * 1000);
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear input buffer
+                std::getline(std::cin, Name);
+                while(true){                            //Nur die verfügbaren Klassen werden angenommen
+                    std::cout << "Mögliche Klassen : ";
+                    for(const auto& name : allyklassen){
+                        std::cout << name << ", ";
+                    }
+                    std::cout << "\nKlasse: ";
+                    std::cin >> Klasse;
+                    auto it = std::find(allyklassen.begin(), allyklassen.end(), Klasse);
+                    if(it != allyklassen.end()){
+                        break;
+                    }else{
+                        std::cout << "Gibt eine gültige Klasse an\n";
+                    }
+                }
+
+                while(true){                             //Nur die verfügbaren Klassen werden angenommen
+                    std::cout << "Mögliche Rassen : ";
+                    for(const auto& rasse : allyrassen){
+                        std::cout << rasse << ", ";
+                    }
+                    std::cout << "\nRasse : ";
+                    std::cin >> Rasse;
+                    auto it = std::find(allyrassen.begin(), allyrassen.end(), Rasse);
+                    if(it != allyrassen.end()){
+                        break;
+                    }else{
+                        std::cout << "Gibt eine gültige Rasse an\n";
+                    }
+                }
 
                 Helden newHeld(Name, Klasse, Rasse, HP, HP, 0, 1, AttackDamage, MagicDamage);
                 Held.push_back(newHeld);
-
+                
+                system("clear");
+                newHeld.print();
+                enter();                
+                //Updaten der Jsondatei
                 nlohmann::json HeldenJson = {
                     {"Name", Name},
                     {"Klasse", Klasse},
@@ -539,7 +634,7 @@ namespace local{
                 std::vector<std::string> names; 
                 std::vector<std::string> rassen;
 
-                std::ifstream file("Enemynames.txt");
+                std::ifstream file("Enemynames");
                 
                 if(file.is_open()){
                     std::string name;
@@ -549,7 +644,7 @@ namespace local{
                     file.close();
                 }
 
-                std::ifstream file2("EnemyRassen.txt");
+                std::ifstream file2("EnemyRassen");
                 if(file2.is_open()){
                     std::string rasse;
                     while(std::getline(file2, rasse)){
@@ -563,7 +658,7 @@ namespace local{
 
                 // Definition des Verteilungsbereichs
                 std::uniform_int_distribution<> disrass(0, 5); // Zahlen zwischen 0 und 5
-                std::uniform_int_distribution<> disname(0,10);
+                std::uniform_int_distribution<> disname(0,19);
                 std::uniform_int_distribution<> disclass(1,2);
                 // Generieren einer Zufallszahl
                 int ran_numb_name = disname(gen);
@@ -573,19 +668,20 @@ namespace local{
                 std::string enemyrass = rassen[ran_numb_rass];
 
                 if(ran_numb_class == 1){
-                enemyattack = Held[0].lvl + 5;
-                enemymagic = 0;
+                enemyattack = Held[0].lvl*3 + 5;
+                enemymagic = Held[0].lvl + 3;
                 }
 
                 if(ran_numb_class == 2){
-                enemyattack = 0;
-                enemymagic = Held[0].lvl + 5;
+                enemyattack = Held[0].lvl + 3;
+                enemymagic = Held[0].lvl*2 + 5;
                 }
                 
                 enemylvl = Held[0].lvl + 1;
                 enemyhealth = enemylvl*15 + 100;
-                Mobs newMob(names[ran_numb_name], rassen[ran_numb_rass], enemyhealth, enemylvl, enemyattack, enemymagic);
+                Mobs newMob(names[ran_numb_name], rassen[ran_numb_rass], enemyhealth, enemyhealth, enemylvl, enemyattack, enemymagic);
                 Mob.push_back(newMob);
+                
                  
             }
             Mobs newMob = Mob[0];
@@ -602,7 +698,11 @@ namespace local{
                  Mob[0] = newMob;
                 if(newMob.hp > 0 ){
                     newMob.Attack(held);
-                    return showKampf_S;
+                    if(held.hp <= 0){
+                        return Gameover_S;
+                    }else{
+                        return showKampf_S;
+                    }
                 }else
                 {
                     return Besiegt_S;
@@ -613,7 +713,11 @@ namespace local{
                 Mob[0] = newMob;
                 if(newMob.hp > 0 ){
                     newMob.Attack(held);
-                return showKampf_S;
+                    if(held.hp <= 0){
+                        return Gameover_S;
+                    }else{
+                        return showKampf_S;
+                    }
                 }else
                 {
                     return Besiegt_S;
@@ -647,6 +751,9 @@ namespace local{
                         break;
                     case Besiegt_S:
                         nextState_ = Besiegt();
+                        break;
+                    case Gameover_S:
+                        nextState_ = GameOver();
                         break;
                     case showComsumables_S:
                         nextState_ = showConsumables();
