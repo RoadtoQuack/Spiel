@@ -544,7 +544,7 @@ namespace local{
                 std::vector<std::string> allyklassen; 
                 std::vector<std::string> allyrassen;
 
-                std::ifstream file("allyKlassen");
+                std::ifstream file("Textdateien/allyKlassen");
                 
                 if(file.is_open()){                     //Einlesen der verfügbaren Klassen in ein vector
                     std::string name;
@@ -554,7 +554,7 @@ namespace local{
                     file.close();
                 }
 
-                std::ifstream file2("allyRassen");
+                std::ifstream file2("Textdateien/allyRassen");
 
                 if(file2.is_open()){                    //Einlesen der verfügbaren Rassen in ein vector
                     std::string rasse;
@@ -634,7 +634,7 @@ namespace local{
                 std::vector<std::string> names; 
                 std::vector<std::string> rassen;
 
-                std::ifstream file("Enemynames");
+                std::ifstream file("Textdateien/Enemynames");
                 
                 if(file.is_open()){
                     std::string name;
@@ -644,7 +644,7 @@ namespace local{
                     file.close();
                 }
 
-                std::ifstream file2("EnemyRassen");
+                std::ifstream file2("Textdateien/EnemyRassen");
                 if(file2.is_open()){
                     std::string rasse;
                     while(std::getline(file2, rasse)){
