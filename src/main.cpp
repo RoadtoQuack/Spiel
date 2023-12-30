@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <unistd.h>
+#include <random>
 
 //g++ -I/root/Spiel/build/_deps/nlohmann_json-src/include -I/root/Spiel/build/_deps/cli11-src/include src/main.cpp
 
@@ -95,11 +96,12 @@ namespace local{
                     {
                         hp += potion;
                         std::cout << "Die HP von " << Name << " wurden um " << potion << " geheilt" << std::endl;
-                    }else if(hp = maxhp){
-                        std::cout << "Die HP von " << Name << " sind schon voll" << std::endl;
+                    
                     }else if (hp + potion > maxhp & hp < maxhp){
                         std::cout << "Die HP von " << Name << " wurden um " << maxhp - hp  << " geheilt" << std::endl;
                         hp = maxhp;
+                    }else if(hp = maxhp){
+                        std::cout << "Die HP von " << Name << " sind schon voll" << std::endl;
                     }
             }
 
@@ -129,7 +131,7 @@ namespace local{
 
             
             void print() const{
-                std::cout << Name << " | Level" << lvl << " | " << Rasse << std::endl;
+                std::cout << Name << " | "  << Rasse << " | Level: " << lvl <<  std::endl;
                 std::cout << "Health        : " << hp << std::endl;
                 std::cout << "Attack-Damage : " << attackdmg << std::endl;
                 std::cout << "Magic-Power   : " << magicdmg << std::endl;
@@ -137,7 +139,7 @@ namespace local{
             }
             //Forward Declaration der Funktionen
             void Attack(Helden& held);
-            void MagicAttack(Helden& held);
+//            void MagicAttack(Helden& held);
 
             void getDamage(int damage){
                 hp -= damage;
@@ -162,15 +164,19 @@ namespace local{
 // Implementation of Mobs methods using Helden
 namespace local{
             void Mobs::Attack(Helden& held){
-             int damage = attackdmg;
-
+             int damage;
+            if(attackdmg >= magicdmg){
+                damage = attackdmg;
+            }else{
+                damage = magicdmg;
+            }
              held.getDamage(damage);
             }
-            void Mobs::MagicAttack(Helden& held){
-                int damage = magicdmg;
-
-                held.getDamage(damage);
-            }
+        //    void Mobs::MagicAttack(Helden& held){
+        //        int damage = magicdmg;
+//
+         //       held.getDamage(damage);
+        //    }
 }
 namespace local{
 
@@ -221,6 +227,12 @@ namespace local{
             std::cout << "2. Gegenstände verkaufen\n";
             std::cout << "3. Zurück zum Menü\n";
         }
+        void printConsum(){//Ausgabe der Verbrauchsgegenstände
+            std::cout << "Verbrauchsgegenstände" << std::endl;
+            std::cout << "--------------------------------------\n\n";
+            std::cout << "1. Heiltränke\n";
+            std::cout << "2. Zurück zum Menü\n";            
+        }
 
         int exit(){
             //Aktualisierung der Objekte in der Json File
@@ -261,44 +273,53 @@ namespace local{
             return 0;
         }
          State_T showConsumables(){
-
-            while (true){
+            
+        while(true){
             system("clear");
+            printConsum();    
+            int zahl;
+            std::cin >> zahl;
+            if(zahl == 1){
+            while (true){
+                system("clear");
+                for( auto& held : Held){
+                    std::cout << "Verbrauchsgegenstände\n";
+                    std::cout << "-----------------------------\n\n";
+                    std::cout << held.Name << " | Level: " << held.lvl << " | " << held.Klasse << " | " << held.Rasse << std::endl;
+                    std::cout << "Health        : " << held.hp << "/" << held.maxhp << std::endl;
 
-            for( auto& held : Held){
-            std::cout << "Verbrauchsgegenstände\n";
-            std::cout << "-----------------------------\n\n";
-            std::cout << held.Name << " | Level: " << held.lvl << " | " << held.Klasse << " | " << held.Rasse << std::endl;
-            std::cout << "Health        : " << held.hp << "/" << held.maxhp << std::endl;
 
-
-            std::cout << "Du hast " << numbpotion << " Heiltränke" << std::endl; 
-            std::cout << std::endl;
-            std::cout << "Will du einen Heiltrank verwenden? (y/n)" << std::endl;
-            int potion = 15;                
-            char ch = std::cin.get();
-            if ( ch == 'y' || ch == 'Y'){
-                if(numbpotion > 0){
-                    system("clear");
-                    int temphp = held.hp;
-                    held.getHealth(potion);
-                    if(temphp < held.hp){
-                        numbpotion -= 1;
+                    std::cout << "Du hast " << numbpotion << " Heiltränke" << std::endl; 
+                    std::cout << std::endl;
+                    std::cout << "Will du einen Heiltrank verwenden? (y/n)" << std::endl;
+                    int potion = 15;                
+                    char ch = std::cin.get();
+                    if ( ch == 'y' || ch == 'Y'){
+                        if(numbpotion > 0){
+                            system("clear");
+                            int temphp = held.hp;
+                            held.getHealth(potion);
+                        if(temphp < held.hp){
+                            numbpotion -= 1;
+                        }
+                        usleep(1000 * 1000);
+                    }else{
+                        system("clear");
+                        std::cout << "Du hast nicht genug Heiltränke" << std::endl;
+                        usleep(1000 * 1000);
                     }
-                    usleep(1000 * 1000);
-                }else{
-                    system("clear");
-                    std::cout << "Du hast nicht genug Heiltränke" << std::endl;
-                    usleep(1000 * 1000);
-                }
-                }
-
-            if (ch == 'n' || ch == 'N'){
-                return showMainMenu_S;
+                    }
+                    if (ch == 'n' || ch == 'N'){
+                        return showComsumables_S;
+                        break;
+                    }       
+                }    
+            }    
+            }else if (zahl == 2){
                 break;
-            }   
+            }
         }    
-    }
+                
             return showMainMenu_S;
 }
 
@@ -434,7 +455,7 @@ namespace local{
                 for (const auto& mobs : Mob){
                 mobs.print();
             }
-                usleep(2000 *1000);
+                usleep(3000 *1000);
                 return Kampf_S;
         }
 
@@ -483,6 +504,7 @@ namespace local{
                 std::cout << "MaxHP: 100\n";
                 std::cout << "AttackDamage: 15\n";
                 std::cout << "MagicDamage: 15\n";
+                usleep(1000 * 1000);
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear input buffer
 
                 Helden newHeld(Name, Klasse, Rasse, HP, HP, 0, 1, AttackDamage, MagicDamage);
@@ -507,9 +529,64 @@ namespace local{
         State_T Kampf(){
             system("clear");
             
+            //Erzeugung von zufälligen Gegnern abhängig vom Character mit einlesen aus Textdateien
             if(Mob.empty()){
-                Mobs newMob("Izolb", "Goblin", 100, 1, 5, 0); //Erweiterung mit Randomnumbers
+                int enemyattack;
+                int enemymagic;
+                int enemyhealth;
+                int enemylvl;
+
+                std::vector<std::string> names; 
+                std::vector<std::string> rassen;
+
+                std::ifstream file("Enemynames.txt");
+                
+                if(file.is_open()){
+                    std::string name;
+                    while(std::getline(file, name)){
+                        names.push_back(name);
+                    }
+                    file.close();
+                }
+
+                std::ifstream file2("EnemyRassen.txt");
+                if(file2.is_open()){
+                    std::string rasse;
+                    while(std::getline(file2, rasse)){
+                        rassen.push_back(rasse);
+                    }
+                    file2.close();
+                }
+
+                std::random_device rd; // Erzeugt ein zufälliges seed
+                std::mt19937 gen(rd()); // Mersenne Twister Zufallsgenerator mit dem seed von random_device
+
+                // Definition des Verteilungsbereichs
+                std::uniform_int_distribution<> disrass(0, 5); // Zahlen zwischen 0 und 5
+                std::uniform_int_distribution<> disname(0,10);
+                std::uniform_int_distribution<> disclass(1,2);
+                // Generieren einer Zufallszahl
+                int ran_numb_name = disname(gen);
+                int ran_numb_rass = disrass(gen);
+                int ran_numb_class = disclass(gen);
+                std::string enemyname = names[ran_numb_name];
+                std::string enemyrass = rassen[ran_numb_rass];
+
+                if(ran_numb_class == 1){
+                enemyattack = Held[0].lvl + 5;
+                enemymagic = 0;
+                }
+
+                if(ran_numb_class == 2){
+                enemyattack = 0;
+                enemymagic = Held[0].lvl + 5;
+                }
+                
+                enemylvl = Held[0].lvl + 1;
+                enemyhealth = enemylvl*15 + 100;
+                Mobs newMob(names[ran_numb_name], rassen[ran_numb_rass], enemyhealth, enemylvl, enemyattack, enemymagic);
                 Mob.push_back(newMob);
+                 
             }
             Mobs newMob = Mob[0];
             printKampfMenu();
@@ -626,7 +703,7 @@ namespace local{
                 // Initialisieren Sie die Datenbank mit einem leeren Objekt, falls die Datei leer ist
                 db = nlohmann::json::object();
             }
-
+            //Einlesen der coins und Potions
             if (db.contains("coins")) {
                 coins = db["coins"].get<int>();
             }
@@ -634,7 +711,7 @@ namespace local{
                 numbpotion = db["numbpotion"].get<int>();
             }
 
-            // erster Zustand wird die Menüanzeige
+            //Erster Zustand = Startbildschirm 
             nextState_ = StartScreen_S;
 
         }
@@ -647,12 +724,12 @@ namespace local{
 int main(int argc, char** argv){
     CLI::App thisApplication{"Final Slug Final Fanatsy", "Spiel"};
     
+    //Hinzufügen einer Funktion für die Eingabe eines Save-Files
     std::string dbfilename;
     thisApplication.add_option("-f", dbfilename, "Path to Database-File");
-
+    //Parsen der Datei
     try{
-        //thisApplication.parse(argc, argv);
-        CLI11_PARSE(thisApplication, argc, argv);
+        thisApplication.parse(argc, argv);
     } catch(const CLI::ParseError& e){
         return thisApplication.exit(e);
     }
