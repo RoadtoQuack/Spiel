@@ -199,6 +199,8 @@ namespace local{
             showComsumables_S,
             showCharacter_S,
             showShop_S,
+            newCharacter_S,
+            swapCharacter_S,
             exit_S
         };
         State_T nextState_;
@@ -217,7 +219,9 @@ namespace local{
             std::cout << "2. Verbrauchsgegenstände\n";
             std::cout << "3. Character Übersicht\n";
             std::cout << "4. Shop\n";
-            std::cout << "5. Beenden\n";
+            std::cout << "5. Erstelle einen neuen Charakter\n";
+            std::cout << "6. Hauptcharakter tauschen\n";
+            std::cout << "7. Beenden\n";
         }
         void printKampfMenu(){//Ausgabe des Kampfmenüs
             std::cout << "Kampfoptionen\n";
@@ -252,21 +256,107 @@ namespace local{
 
             }
         }
+        void createCharacter(){
+                system("clear");
+                std::string Name, Klasse, Rasse;
+                int HP = 100;
+                int AttackDamage = 15;
+                int MagicDamage = 5;
+
+                std::vector<std::string> allyklassen; 
+                std::vector<std::string> allyrassen;
+
+                std::ifstream file("Textdateien/allyKlassen");
+                
+                if(file.is_open()){                     //Einlesen der verfügbaren Klassen in ein vector
+                    std::string name;
+                    while(std::getline(file, name)){
+                        allyklassen.push_back(name);
+                    }
+                    file.close();
+                }
+
+                std::ifstream file2("Textdateien/allyRassen");
+
+                if(file2.is_open()){                    //Einlesen der verfügbaren Rassen in ein vector
+                    std::string rasse;
+                    while(std::getline(file2, rasse)){
+                        allyrassen.push_back(rasse);
+                    }
+                    file2.close();
+                }
+
+
+                std::cout << "Erstelle einen neuen Character\n\n";
+                std::cout << "Name: ";
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::getline(std::cin, Name);
+                while(true){                            //Nur die verfügbaren Klassen werden angenommen
+                    std::cout << "Mögliche Klassen : ";
+                    for(const auto& name : allyklassen){
+                        std::cout << name << ", ";
+                    }
+                    std::cout << "\nKlasse: ";
+                    std::cin >> Klasse;
+                    auto it = std::find(allyklassen.begin(), allyklassen.end(), Klasse);
+                    if(it != allyklassen.end()){
+                        break;
+                    }else{
+                        std::cout << "Gibt eine gültige Klasse an\n";
+                    }
+                }
+
+                while(true){                             //Nur die verfügbaren Klassen werden angenommen
+                    std::cout << "Mögliche Rassen : ";
+                    for(const auto& rasse : allyrassen){
+                        std::cout << rasse << ", ";
+                    }
+                    std::cout << "\nRasse : ";
+                    std::cin >> Rasse;
+                    auto it = std::find(allyrassen.begin(), allyrassen.end(), Rasse);
+                    if(it != allyrassen.end()){
+                        break;
+                    }else{
+                        std::cout << "Gibt eine gültige Rasse an\n";
+                    }
+                }
+
+                Helden newHeld(Name, Klasse, Rasse, HP, HP, 0, 1, AttackDamage, MagicDamage);
+                Held.push_back(newHeld);
+                
+                system("clear");
+                newHeld.print();
+                enter();                
+                //Updaten der Jsondatei
+                nlohmann::json HeldenJson = {
+                    {"Name", Name},
+                    {"Klasse", Klasse},
+                    {"Rasse", Rasse},
+                    {"Health", HP},
+                    {"MaxHealth", HP},
+                    {"EXP-Points", 0},
+                    {"Level", 1},
+                    {"AttackDamage", AttackDamage},
+                    {"MagicDamage", MagicDamage}
+                };
+                db["Held"].push_back(HeldenJson);
+        }
 
         int exit(){
             //Aktualisierung der Objekte in der Json File
-            for(auto& held: Held){
+
+            for(size_t i = 0; i < Held.size();i++){
                 if (!db["Held"].empty()) {
-                db["Held"][0]["Name"] = held.Name; 
-                db["Held"][0]["Klasse"] = held.Klasse;
-                db["Held"][0]["Rasse"] = held.Rasse;
-                db["Held"][0]["Health"] = held.hp;// Beispiel für die Änderung des Health-Werts
-                db["Held"][0]["MaxHealth"] = held.maxhp;
-                db["Held"][0]["EXP-Punkte"] = held.exp;
-                db["Held"][0]["Level"] = held.lvl;
-                db["Held"][0]["AttackDamage"] = held.attackdmg;
-                db["Held"][0]["MagicDamage"] = held.magicdmg;
-                }
+                db["Held"][i]["Name"] = Held[i].Name; 
+                db["Held"][i]["Klasse"] = Held[i].Klasse;
+                db["Held"][i]["Rasse"] = Held[i].Rasse;
+                db["Held"][i]["Health"] = Held[i].hp;// Beispiel für die Änderung des Health-Werts
+                db["Held"][i]["MaxHealth"] = Held[i].maxhp;
+                db["Held"][i]["EXP-Points"] = Held[i].exp;
+                db["Held"][i]["Level"] = Held[i].lvl;
+                db["Held"][i]["AttackDamage"] = Held[i].attackdmg;
+                db["Held"][i]["MagicDamage"] = Held[i].magicdmg;
+                }                
             }
             if(!db["coins"].empty()){
                 db["coins"] = coins;
@@ -301,38 +391,38 @@ namespace local{
             if(zahl == 1){
             while (true){
                 system("clear");
-                for( auto& held : Held){
-                    std::cout << "Verbrauchsgegenstände\n";
-                    std::cout << "-----------------------------\n\n";
-                    std::cout << held.Name << " | Level: " << held.lvl << " | " << held.Klasse << " | " << held.Rasse << std::endl;
-                    std::cout << "Health        : " << held.hp << "/" << held.maxhp << std::endl;
+                
+                std::cout << "Verbrauchsgegenstände\n";
+                std::cout << "-----------------------------\n\n";
+                std::cout << Held[0].Name << " | Level: " << Held[0].lvl << " | " << Held[0].Klasse << " | " << Held[0].Rasse << std::endl;
+                std::cout << "Health        : " << Held[0].hp << "/" << Held[0].maxhp << std::endl;
 
 
-                    std::cout << "Du hast " << numbpotion << " Heiltränke" << std::endl; 
-                    std::cout << std::endl;
-                    std::cout << "Will du einen Heiltrank verwenden? (y/n)" << std::endl;
-                    int potion = 15;                
-                    char ch = std::cin.get();
-                    if ( ch == 'y' || ch == 'Y'){
-                        if(numbpotion > 0){
-                            system("clear");
-                            int temphp = held.hp;
-                            held.getHealth(potion);
-                        if(temphp < held.hp){
-                            numbpotion -= 1;
-                        }
-                        usleep(1000 * 1000);
-                    }else{
+                std::cout << "Du hast " << numbpotion << " Heiltränke" << std::endl; 
+                std::cout << std::endl;
+                std::cout << "Will du einen Heiltrank verwenden? (y/n)" << std::endl;
+                int potion = 15;                
+                char ch = std::cin.get();
+                if ( ch == 'y' || ch == 'Y'){
+                    if(numbpotion > 0){
                         system("clear");
-                        std::cout << "Du hast nicht genug Heiltränke" << std::endl;
-                        usleep(1000 * 1000);
+                        int temphp = Held[0].hp;
+                        Held[0].getHealth(potion);
+                    if(temphp < Held[0].hp){
+                        numbpotion -= 1;
                     }
-                    }
-                    if (ch == 'n' || ch == 'N'){
-                        return showComsumables_S;
-                        break;
-                    }       
-                }    
+                    usleep(1000 * 1000);
+                }else{
+                    system("clear");
+                    std::cout << "Du hast nicht genug Heiltränke" << std::endl;
+                    usleep(1000 * 1000);
+                }
+                }
+                if (ch == 'n' || ch == 'N'){
+                    return showComsumables_S;
+                    break;
+                }       
+                    
             }    
             }else if (zahl == 2){
                 break;
@@ -437,6 +527,55 @@ namespace local{
             return showMainMenu_S;
         }
 
+        State_T swapCharacter(){
+            if(Held.size() == 1){
+                std::cout << "Du hast nur einen Charakter\n";
+                usleep(1000*1000);
+                return showMainMenu_S;
+            }
+            system("clear");
+            int i = 1;
+            for (const auto& held : Held) {
+                std::cout << i++ <<std::endl;
+                held.print();
+            }
+            std::cout << "Welchen Charakter willst du benutzen\n";
+            while(true){
+                int input{};
+                std::cin >> input;
+                if(input > 0 ){
+                    system("clear");
+                    if(input <= Held.size()){
+                    std::cout << "Do you want to Swap with " << Held[input-1].Name << " ?(y/n)\n";    
+                    char choice{};
+                    std::cin >> choice;
+                    if(choice == 'y' || choice == 'Y'){
+                        std::swap(Held[0],Held[input-1]);
+                        std::cout << "Deine Charakter wurden getauscht. Drücke Enter um ins Mainmenü zurückzukehren\n";
+                        enter();
+                        return showMainMenu_S;
+                    }else if(choice == 'n' || choice == 'N'){
+                        return showMainMenu_S;
+                    }
+                    
+                    }else{
+                        std::cout << "Der Charakter existiert nicht.\n";
+                        usleep(1000 * 1000);
+                        return showMainMenu_S;
+                    }
+                    break;
+                } 
+
+            }
+            return showMainMenu_S;
+        }
+
+        State_T newCharacter(){
+            createCharacter();
+            std::swap(Held[0],Held[Held.size()- 1]);
+            return showMainMenu_S;
+        }
+
         State_T showMainMenu(){
             system("clear");
             printMM();
@@ -458,6 +597,12 @@ namespace local{
                 return showShop_S;
                 break;
                 case 5:
+                return newCharacter_S;
+                break;
+                case 6:
+                return swapCharacter_S;
+                break;
+                case 7:
                 return exit_S;
                 break;
                 default:
@@ -467,9 +612,7 @@ namespace local{
         }
         State_T showKampf(){
             system("clear");
-                for (const auto& held : Held) {
-                held.print();
-            }
+                Held[0].print();
                 std::cout << "Enemy:" << std::endl;
                 for (const auto& mobs : Mob){
                 mobs.print();
@@ -484,10 +627,9 @@ namespace local{
             std::cout << "Du erhälst 1000EP und 200 coins\n";
             coins += 200;
 
-            for (auto& held : Held) {
-            held.getEXP(1000);
+            Held[0].getEXP(1000);
             usleep(1000 * 1000);
-            }
+            
             Mob.pop_back();
             enter();
             return showMainMenu_S;
@@ -496,13 +638,18 @@ namespace local{
 
         State_T GameOver(){//Löschen des Characters in dem Vektor und Json
             system("clear");
-            Held.pop_back();
+            std::string tempName = Held[0].Name;
+            Held.erase(Held.begin());
             Mob.pop_back();
             db["Held"].erase(0);
 
-            std::cout << "You DIED\n";
-            usleep(1000 * 1000);
+            std::cout << tempName << " ist gestorben\n";
+            usleep(2000 * 1000);
+            if(Held.empty()){
+
+            
             while(true){
+                std::cout << "All Heros are dead\n";
                 std::cout << "Du you want to Start a new Game?(y/n)\n";
                 char ch = std::cin.get();
 
@@ -516,7 +663,10 @@ namespace local{
                     return exit_S;
                 }
             }
-            return Gameover_S; 
+            return Gameover_S;
+            }else{
+                return showMainMenu_S;
+            } 
         }
 
         State_T StartScreen(){//Startbildschirm
@@ -535,88 +685,7 @@ namespace local{
             }
 
             if(Held.empty()){ //Erstellung eines Neuen Characters
-                system("clear");
-                std::string Name, Klasse, Rasse;
-                int HP = 100;
-                int AttackDamage = 15;
-                int MagicDamage = 5;
-
-                std::vector<std::string> allyklassen; 
-                std::vector<std::string> allyrassen;
-
-                std::ifstream file("Textdateien/allyKlassen");
-                
-                if(file.is_open()){                     //Einlesen der verfügbaren Klassen in ein vector
-                    std::string name;
-                    while(std::getline(file, name)){
-                        allyklassen.push_back(name);
-                    }
-                    file.close();
-                }
-
-                std::ifstream file2("Textdateien/allyRassen");
-
-                if(file2.is_open()){                    //Einlesen der verfügbaren Rassen in ein vector
-                    std::string rasse;
-                    while(std::getline(file2, rasse)){
-                        allyrassen.push_back(rasse);
-                    }
-                    file2.close();
-                }
-
-
-                std::cout << "Erstelle einen neuen Character\n\n";
-                std::cout << "Name: ";
-                std::getline(std::cin, Name);
-                while(true){                            //Nur die verfügbaren Klassen werden angenommen
-                    std::cout << "Mögliche Klassen : ";
-                    for(const auto& name : allyklassen){
-                        std::cout << name << ", ";
-                    }
-                    std::cout << "\nKlasse: ";
-                    std::cin >> Klasse;
-                    auto it = std::find(allyklassen.begin(), allyklassen.end(), Klasse);
-                    if(it != allyklassen.end()){
-                        break;
-                    }else{
-                        std::cout << "Gibt eine gültige Klasse an\n";
-                    }
-                }
-
-                while(true){                             //Nur die verfügbaren Klassen werden angenommen
-                    std::cout << "Mögliche Rassen : ";
-                    for(const auto& rasse : allyrassen){
-                        std::cout << rasse << ", ";
-                    }
-                    std::cout << "\nRasse : ";
-                    std::cin >> Rasse;
-                    auto it = std::find(allyrassen.begin(), allyrassen.end(), Rasse);
-                    if(it != allyrassen.end()){
-                        break;
-                    }else{
-                        std::cout << "Gibt eine gültige Rasse an\n";
-                    }
-                }
-
-                Helden newHeld(Name, Klasse, Rasse, HP, HP, 0, 1, AttackDamage, MagicDamage);
-                Held.push_back(newHeld);
-                
-                system("clear");
-                newHeld.print();
-                enter();                
-                //Updaten der Jsondatei
-                nlohmann::json HeldenJson = {
-                    {"Name", Name},
-                    {"Klasse", Klasse},
-                    {"Rasse", Rasse},
-                    {"Health", HP},
-                    {"MaxHealth", HP},
-                    {"EXP-Punkte", 0},
-                    {"Level", 1},
-                    {"AttackDamage", AttackDamage},
-                    {"MagicDamage", MagicDamage}
-                };
-                db["Held"].push_back(HeldenJson);
+                createCharacter();
             }
             return showMainMenu_S;
         }
@@ -770,6 +839,12 @@ namespace local{
                     case StartScreen_S:
                         nextState_ = StartScreen();
                         break;
+                    case swapCharacter_S:
+                        nextState_ = swapCharacter();
+                        break;
+                    case newCharacter_S:
+                        nextState_ = newCharacter();
+                        break;    
                     default:
                     [[fallthrough]]; //Überprüfen
                     case exit_S:
