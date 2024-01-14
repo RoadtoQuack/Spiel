@@ -344,6 +344,63 @@ namespace local{
                 db["Held"].push_back(HeldenJson);
         }
 
+        void createEnemy(){
+                int enemyattack;
+                int enemymagic;
+                int enemyhealth;
+                int enemylvl;
+
+                std::vector<std::string> names; 
+                std::vector<std::string> rassen;
+
+                std::ifstream file("Textdateien/Enemynames");
+                
+                if(file.is_open()){
+                    std::string name;
+                    while(std::getline(file, name)){
+                        names.push_back(name);
+                    }
+                    file.close();
+                }
+
+                std::ifstream file2("Textdateien/EnemyRassen");
+                if(file2.is_open()){
+                    std::string rasse;
+                    while(std::getline(file2, rasse)){
+                        rassen.push_back(rasse);
+                    }
+                    file2.close();
+                }
+
+                std::random_device rd; // Erzeugt ein zufälliges seed
+                std::mt19937 gen(rd()); // Mersenne Twister Zufallsgenerator mit dem seed von random_device
+
+                // Definition des Verteilungsbereichs
+                std::uniform_int_distribution<> disrass(0, 5); // Zahlen zwischen 0 und 5
+                std::uniform_int_distribution<> disname(0,19);
+                std::uniform_int_distribution<> disclass(1,2);
+                // Generieren einer Zufallszahl
+                int ran_numb_name = disname(gen);
+                int ran_numb_rass = disrass(gen);
+                int ran_numb_class = disclass(gen);
+                std::string enemyname = names[ran_numb_name];
+                std::string enemyrass = rassen[ran_numb_rass];
+
+                if(ran_numb_class == 1){
+                enemyattack = Held[0].lvl*3 + 5;
+                enemymagic = Held[0].lvl + 3;
+                }
+
+                if(ran_numb_class == 2){
+                enemyattack = Held[0].lvl + 3;
+                enemymagic = Held[0].lvl*2 + 5;
+                }
+                
+                enemylvl = Held[0].lvl + 1;
+                enemyhealth = enemylvl*15 + 100;
+                Mobs newMob(names[ran_numb_name], rassen[ran_numb_rass], enemyhealth, enemyhealth, enemylvl, enemyattack, enemymagic);
+                Mob.push_back(newMob);
+        }
         int exit(){
             //Aktualisierung der Objekte in der Json File
 
@@ -830,63 +887,7 @@ namespace local{
             
             //Erzeugung von zufälligen Gegnern abhängig vom Character mit einlesen aus Textdateien
             if(Mob.empty()){
-                int enemyattack;
-                int enemymagic;
-                int enemyhealth;
-                int enemylvl;
-
-                std::vector<std::string> names; 
-                std::vector<std::string> rassen;
-
-                std::ifstream file("Textdateien/Enemynames");
-                
-                if(file.is_open()){
-                    std::string name;
-                    while(std::getline(file, name)){
-                        names.push_back(name);
-                    }
-                    file.close();
-                }
-
-                std::ifstream file2("Textdateien/EnemyRassen");
-                if(file2.is_open()){
-                    std::string rasse;
-                    while(std::getline(file2, rasse)){
-                        rassen.push_back(rasse);
-                    }
-                    file2.close();
-                }
-
-                std::random_device rd; // Erzeugt ein zufälliges seed
-                std::mt19937 gen(rd()); // Mersenne Twister Zufallsgenerator mit dem seed von random_device
-
-                // Definition des Verteilungsbereichs
-                std::uniform_int_distribution<> disrass(0, 5); // Zahlen zwischen 0 und 5
-                std::uniform_int_distribution<> disname(0,19);
-                std::uniform_int_distribution<> disclass(1,2);
-                // Generieren einer Zufallszahl
-                int ran_numb_name = disname(gen);
-                int ran_numb_rass = disrass(gen);
-                int ran_numb_class = disclass(gen);
-                std::string enemyname = names[ran_numb_name];
-                std::string enemyrass = rassen[ran_numb_rass];
-
-                if(ran_numb_class == 1){
-                enemyattack = Held[0].lvl*3 + 5;
-                enemymagic = Held[0].lvl + 3;
-                }
-
-                if(ran_numb_class == 2){
-                enemyattack = Held[0].lvl + 3;
-                enemymagic = Held[0].lvl*2 + 5;
-                }
-                
-                enemylvl = Held[0].lvl + 1;
-                enemyhealth = enemylvl*15 + 100;
-                Mobs newMob(names[ran_numb_name], rassen[ran_numb_rass], enemyhealth, enemyhealth, enemylvl, enemyattack, enemymagic);
-                Mob.push_back(newMob);
-                
-                 
+                createEnemy();
             }
             Mobs newMob = Mob[0];
             printKampfMenu();
