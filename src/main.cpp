@@ -207,7 +207,9 @@ namespace local{
         std::vector<Helden> Held{};
         std::vector<Mobs> Mob{};
         int coins = 0;
-        int numbpotion = 0;
+        int numbpotion_s = 0;
+        int numbpotion_m = 0;
+        int numbpotion_l = 0;
         nlohmann::json db;
         
 
@@ -361,10 +363,15 @@ namespace local{
             if(!db["coins"].empty()){
                 db["coins"] = coins;
             }
-            if(!db["numbpotion"].empty()){
-                db["numbpotion"] = numbpotion;
+            if(!db["numbpotion_s"].empty()){
+                db["numbpotion_s"] = numbpotion_s;
             }
-
+            if(!db["numbpotion_m"].empty()){
+                db["numbpotion_m"] = numbpotion_m;
+            }
+            if(!db["numbpotion_l"].empty()){
+                db["numbpotion_l"] = numbpotion_l;
+            }
             //Speichern der Datei
             std::cout << "Save to file? (y/n): ";
             char c{};
@@ -398,31 +405,103 @@ namespace local{
                 std::cout << "Health        : " << Held[0].hp << "/" << Held[0].maxhp << std::endl;
 
 
-                std::cout << "Du hast " << numbpotion << " Heiltränke" << std::endl; 
+                std::cout << "1. " << numbpotion_s << "x Heiltrank(s) benutzen" << std::endl;
+                std::cout << "2. " << numbpotion_m << "x Heiltrank(m) benutzen" << std::endl;
+                std::cout << "3. " << numbpotion_l << "x Heiltrank(l) benutzen" << std::endl; 
+                std::cout << "4. Zurück\n";
                 std::cout << std::endl;
-                std::cout << "Will du einen Heiltrank verwenden? (y/n)" << std::endl;
-                int potion = 15;                
+                int potion_s = 15;
+                int potion_m = 30;
+                int potion_l = 60; 
+                while(true){
+                int z;
+                std::cin >> z;
+                if(z == 1){
+                std::cout << "Willst du einen Heiltrank(s) benutzen?(y/n)\n";
+                while(true){
                 char ch = std::cin.get();
                 if ( ch == 'y' || ch == 'Y'){
-                    if(numbpotion > 0){
+                    if(numbpotion_s > 0){
                         system("clear");
                         int temphp = Held[0].hp;
-                        Held[0].getHealth(potion);
+                        Held[0].getHealth(potion_s);
                     if(temphp < Held[0].hp){
-                        numbpotion -= 1;
+                        numbpotion_s -= 1;
                     }
                     usleep(1000 * 1000);
+                    break;
                 }else{
                     system("clear");
                     std::cout << "Du hast nicht genug Heiltränke" << std::endl;
                     usleep(1000 * 1000);
+                    break;
                 }
                 }
                 if (ch == 'n' || ch == 'N'){
                     return showComsumables_S;
                     break;
-                }       
-                    
+                }
+                }
+                break;
+                }else if(z == 2){
+                std::cout << "Willst du einen Heiltrank(m) benutzen?(y/n)\n";
+                while(true){
+                char ch = std::cin.get();
+                if ( ch == 'y' || ch == 'Y'){
+                    if(numbpotion_m > 0){
+                        system("clear");
+                        int temphp = Held[0].hp;
+                        Held[0].getHealth(potion_m);
+                    if(temphp < Held[0].hp){
+                        numbpotion_m -= 1;
+                    }
+                    usleep(1000 * 1000);
+                    break;
+                }else{
+                    system("clear");
+                    std::cout << "Du hast nicht genug Heiltränke" << std::endl;
+                    usleep(1000 * 1000);
+                    break;
+                }
+                }
+                if (ch == 'n' || ch == 'N'){
+                    return showComsumables_S;
+                    break;
+                }
+                }
+                break;
+                }else if(z == 3){
+                std::cout << "Willst du einen Heiltrank(l) benutzen?(y/n)\n";
+                while(true){
+                char ch = std::cin.get();
+                if ( ch == 'y' || ch == 'Y'){
+                    if(numbpotion_l > 0){
+                        system("clear");
+                        int temphp = Held[0].hp;
+                        Held[0].getHealth(potion_l);
+                    if(temphp < Held[0].hp){
+                        numbpotion_l -= 1;
+                    }
+                    usleep(1000 * 1000);
+                    break;
+                }else{
+                    system("clear");
+                    std::cout << "Du hast nicht genug Heiltränke" << std::endl;
+                    usleep(1000 * 1000);
+                    break;
+                }
+                }
+                if (ch == 'n' || ch == 'N'){
+                    return showComsumables_S;
+                    break;
+                }     
+                }
+                break;               
+                }else if(z == 4){
+                    return showComsumables_S;
+                    break;
+                } 
+                }   
             }    
             }else if (zahl == 2){
                 break;
@@ -455,8 +534,9 @@ namespace local{
         State_T showShop(){ 
             system("clear");
             printShop(); 
-            int price = 100;
-            
+            int price_s = 100;
+            int price_m = 200;
+            int price_l = 300;
             while(true){
                 int Wahl;
                 std::cin >> Wahl;
@@ -467,18 +547,19 @@ namespace local{
                     std::cout << "Shop\n";
                     std::cout << "--------------------------------------------\n";
                     std::cout << "coins   : " << coins << std::endl; 
-                    std::cout << "Potions : " << numbpotion << std::endl;
                     std::cout << "\nWelche Gegenstände willst du kaufen?\n\n";
-                    std::cout << "1. Heilpotions" << std::endl;
-                    std::cout << "2. Zurück\n";
+                    std::cout << "1. Heilpotion(s)" << std::endl;
+                    std::cout << "2. Heilpotion(m)" << std::endl;
+                    std::cout << "3. Heilpotion(l)" << std::endl;
+                    std::cout << "4. Zurück\n";
                     int input{};
                     std::cin >> input;
                     if(input == 1 ){
-                        if(coins >= price){
+                        if(coins >= price_s){
                             system("clear");
-                            numbpotion += 1;
-                            coins -= price;
-                            std::cout << "Du hast 1 Potion für " << price << " coins gekauft\n";
+                            numbpotion_s += 1;
+                            coins -= price_s;
+                            std::cout << "Du hast 1 Potion(s) für " << price_s << " coins gekauft\n";
                             std::cout << "Rest coins: " << coins << std::endl;
                             usleep(1000 * 1000);
                         }else{
@@ -486,7 +567,33 @@ namespace local{
                             std::cout << "Du hast nicht genügend coins\n";
                             usleep(2000 * 1000);
                         }
-                    }else if (input == 2){        
+                    }else if (input == 2){
+                        if(coins >= price_m){
+                            system("clear");
+                            numbpotion_m += 1;
+                            coins -= price_m;
+                            std::cout << "Du hast 1 Potion(m) für " << price_m << " coins gekauft\n";
+                            std::cout << "Rest coins: " << coins << std::endl;
+                            usleep(1000 * 1000);
+                        }else{
+                            system("clear");
+                            std::cout << "Du hast nicht genügend coins\n";
+                            usleep(2000 * 1000);
+                        }
+                    }else if (input == 3){
+                        if(coins >= price_l){
+                            system("clear");
+                            numbpotion_l += 1;
+                            coins -= price_l;
+                            std::cout << "Du hast 1 Potion(l) für " << price_l << " coins gekauft\n";
+                            std::cout << "Rest coins: " << coins << std::endl;
+                            usleep(1000 * 1000);
+                        }else{
+                            system("clear");
+                            std::cout << "Du hast nicht genügend coins\n";
+                            usleep(2000 * 1000);
+                        }
+                    }else if (input == 4){        
                     return showShop_S;
                     }   
                                         
@@ -498,24 +605,52 @@ namespace local{
                     std::cout << "Shop\n";
                     std::cout << "--------------------------------------------\n";
                     std::cout << "Welche Gegenstände willst du verkaufen?\n\n";
-                    std::cout << "1. Heilpotions : " << numbpotion << std::endl;
-                    std::cout << "2. Zurück\n";
+                    std::cout << "1. Heilpotions(s) : " << numbpotion_s << std::endl;
+                    std::cout << "2. Heilpotions(m) : " << numbpotion_m << std::endl;
+                    std::cout << "3. Heilpotions(l) : " << numbpotion_l << std::endl;
+                    std::cout << "4. Zurück\n";
                     int input{};
                     std::cin >> input;
                     if(input == 1 ){
-                        if(numbpotion > 0){
+                        if(numbpotion_s > 0){
                             system("clear");
-                            numbpotion -= 1;
-                            coins += (price*0.8);
-                            std::cout << "Du hast 1 Potion für " << price*0.8 << " coins verkauft\n";
+                            numbpotion_s -= 1;
+                            coins += (price_s*0.8);
+                            std::cout << "Du hast 1 Potion(s) für " << price_s*0.8 << " coins verkauft\n";
                             std::cout << "Du Besitzt jetzt " << coins << " coins\n";
                             usleep(1000 * 1000);
                         }else{
                             system("clear");
-                            std::cout << "Du hast keine Potions\n";
+                            std::cout << "Du hast keine Potions(s)\n";
                             usleep(2000 * 1000);
                         }
-                    }else if (input == 2){        
+                    }else if (input == 2){
+                        if(numbpotion_m > 0){
+                            system("clear");
+                            numbpotion_m -= 1;
+                            coins += (price_m*0.8);
+                            std::cout << "Du hast 1 Potion(m) für " << price_m*0.8 << " coins verkauft\n";
+                            std::cout << "Du Besitzt jetzt " << coins << " coins\n";
+                            usleep(1000 * 1000);
+                        }else{
+                            system("clear");
+                            std::cout << "Du hast keine Potions(m)\n";
+                            usleep(2000 * 1000);
+                        }
+                    }else if (input == 3){
+                        if(numbpotion_l > 0){
+                            system("clear");
+                            numbpotion_l -= 1;
+                            coins += (price_l*0.8);
+                            std::cout << "Du hast 1 Potion(l) für " << price_l*0.8 << " coins verkauft\n";
+                            std::cout << "Du Besitzt jetzt " << coins << " coins\n";
+                            usleep(1000 * 1000);
+                        }else{
+                            system("clear");
+                            std::cout << "Du hast keine Potions(l)\n";
+                            usleep(2000 * 1000);
+                        }
+                    }else if (input == 4){        
                     return showShop_S;
                     }   
                                         
@@ -889,10 +1024,15 @@ namespace local{
             if (db.contains("coins")) {
                 coins = db["coins"].get<int>();
             }
-            if (db.contains("numbpotion")) {
-                numbpotion = db["numbpotion"].get<int>();
+            if (db.contains("numbpotion_s")) {
+                numbpotion_s = db["numbpotion_s"].get<int>();
             }
-
+            if (db.contains("numbpotion_m")) {
+                numbpotion_m = db["numbpotion_m"].get<int>();
+            }
+            if (db.contains("numbpotion_l")) {
+                numbpotion_l = db["numbpotion_l"].get<int>();
+            }
             //Erster Zustand = Startbildschirm 
             nextState_ = StartScreen_S;
 
